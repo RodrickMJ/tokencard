@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>MP Card Token Test</title>
+  <script src="https://sdk.mercadopago.com/js/v2"></script>
+</head>
+<body>
+
+<h2>Crear Card Token (modo feo)</h2>
+
+<form id="card-form">
+  <div>
+    <label>Número de tarjeta</label><br>
+    <input id="cardNumber" value="5031755734530604" />
+  </div>
+
+  <div>
+    <label>Mes expiración</label><br>
+    <input id="cardExpirationMonth" value="11" />
+  </div>
+
+  <div>
+    <label>Año expiración</label><br>
+    <input id="cardExpirationYear" value="2025" />
+  </div>
+
+  <div>
+    <label>Código de seguridad</label><br>
+    <input id="securityCode" value="123" />
+  </div>
+
+  <div>
+    <label>Nombre del titular</label><br>
+    <input id="cardholderName" value="APRO" />
+  </div>
+
+  <div>
+    <label>DNI</label><br>
+    <input id="identificationNumber" value="12345678" />
+  </div>
+
+  <button type="submit">Crear token</button>
+</form>
+
+<pre id="result"></pre>
+
+<script>
+  const mp = new MercadoPago("APP_USR-b3df888b-2565-48db-a122-ddd3e7a681b9");
+
+  const form = document.getElementById("card-form");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const cardData = {
+      cardNumber: document.getElementById("cardNumber").value,
+      cardExpirationMonth: document.getElementById("cardExpirationMonth").value,
+      cardExpirationYear: document.getElementById("cardExpirationYear").value,
+      securityCode: document.getElementById("securityCode").value,
+      cardholderName: document.getElementById("cardholderName").value,
+      identificationType: "DNI",
+      identificationNumber: document.getElementById("identificationNumber").value,
+    };
+
+    try {
+      const result = await mp.createCardToken(cardData);
+      document.getElementById("result").textContent =
+        JSON.stringify(result, null, 2);
+
+      console.log("CARD TOKEN:", result.id);
+    } catch (err) {
+      document.getElementById("result").textContent =
+        JSON.stringify(err, null, 2);
+    }
+  });
+</script>
+
+</body>
+</html>
