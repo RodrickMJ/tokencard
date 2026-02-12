@@ -6,9 +6,10 @@
 </head>
 <body>
 
-<h2>Crear Card Token (modo feo)</h2>
+<h2>Crear Card Token (sandbox México)</h2>
 
 <form id="card-form">
+
   <div>
     <label>Número de tarjeta</label><br>
     <input id="cardNumber" value="5031755734530604" />
@@ -21,7 +22,7 @@
 
   <div>
     <label>Año expiración</label><br>
-    <input id="cardExpirationYear" value="2025" />
+    <input id="cardExpirationYear" value="2028" />
   </div>
 
   <div>
@@ -35,8 +36,13 @@
   </div>
 
   <div>
-    <label>DNI</label><br>
-    <input id="identificationNumber" value="12345678" />
+    <label>Email comprador test</label><br>
+    <input id="email" value="comprador_test@email.com" />
+  </div>
+
+  <div>
+    <label>RFC</label><br>
+    <input id="identificationNumber" value="XAXX010101000" />
   </div>
 
   <button type="submit">Crear token</button>
@@ -45,9 +51,10 @@
 <pre id="result"></pre>
 
 <script src="https://sdk.mercadopago.com/js/v2"></script>
-  
+
 <script>
-  const mp = new MercadoPago("APP_USR-e10b153a-5570-4c11-b67b-54f51a23d531");
+  // ⚠️ PUBLIC KEY DEL VENDEDOR
+  const mp = new MercadoPago("APP_USR-b5194730-4b15-4ea3-9412-9e471a668821");
 
   const form = document.getElementById("card-form");
 
@@ -62,14 +69,20 @@
       cardholderName: document.getElementById("cardholderName").value,
       identificationType: "RFC",
       identificationNumber: document.getElementById("identificationNumber").value,
+      cardholderEmail: document.getElementById("email").value,
     };
 
     try {
       const result = await mp.createCardToken(cardData);
+
       document.getElementById("result").textContent =
         JSON.stringify(result, null, 2);
 
       console.log("CARD TOKEN:", result.id);
+
+      // 🔥 Este token lo mandas a tu backend
+      // fetch("/tu-endpoint", { method: "POST", body: JSON.stringify({ token: result.id }) })
+
     } catch (err) {
       document.getElementById("result").textContent =
         JSON.stringify(err, null, 2);
