@@ -67,9 +67,11 @@
       cardExpirationYear: document.getElementById("cardExpirationYear").value,
       securityCode: document.getElementById("securityCode").value,
       cardholderName: document.getElementById("cardholderName").value,
-      identificationType: "RFC",
+      
+      // 🔥 CAMBIOS CLAVE:
+      identificationType: "CPF",  // NO "RFC", debe ser "CPF"
       identificationNumber: document.getElementById("identificationNumber").value,
-      cardholderEmail: document.getElementById("email").value,
+      cardholderEmail: document.getElementById("email").value,  // ANTES ERA SOLO "email"
     };
 
     try {
