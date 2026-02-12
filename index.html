@@ -40,7 +40,10 @@
     <input id="email" value="comprador_test@email.com" />
   </div>
 
-
+ <div>
+    <label>RFC</label><br>
+    <input id="identificationNumber" value="XAXX010101000" />
+  </div>
 
   <button type="submit">Crear token</button>
 </form>
@@ -50,8 +53,8 @@
 <script src="https://sdk.mercadopago.com/js/v2"></script>
 
 <script>
-  // ⚠️ PUBLIC KEY DEL VENDEDOR
-  const mp = new MercadoPago("TEST-899e852f-a441-4545-adbc-2c53a0f741cb");
+
+  const mp = new MercadoPago("APP_USR-b5194730-4b15-4ea3-9412-9e471a668821");
 
   const form = document.getElementById("card-form");
 
@@ -64,8 +67,10 @@
       cardExpirationYear: document.getElementById("cardExpirationYear").value,
       securityCode: document.getElementById("securityCode").value,
       cardholderName: document.getElementById("cardholderName").value,
-      
-      cardholderEmail: document.getElementById("email").value,  // ANTES ERA SOLO "email"
+
+      identificationType: "RFC",  
+      identificationNumber: document.getElementById("identificationNumber").value,
+      cardholderEmail: document.getElementById("email").value,  
     };
 
     try {
@@ -76,8 +81,6 @@
 
       console.log("CARD TOKEN:", result.id);
 
-      // 🔥 Este token lo mandas a tu backend
-      // fetch("/tu-endpoint", { method: "POST", body: JSON.stringify({ token: result.id }) })
 
     } catch (err) {
       document.getElementById("result").textContent =
