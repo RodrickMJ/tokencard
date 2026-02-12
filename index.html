@@ -40,10 +40,7 @@
     <input id="email" value="comprador_test@email.com" />
   </div>
 
-  <div>
-    <label>RFC</label><br>
-    <input id="identificationNumber" value="XAXX010101000" />
-  </div>
+
 
   <button type="submit">Crear token</button>
 </form>
@@ -68,9 +65,6 @@
       securityCode: document.getElementById("securityCode").value,
       cardholderName: document.getElementById("cardholderName").value,
       
-      // 🔥 CAMBIOS CLAVE:
-      identificationType: "CPF",  // NO "RFC", debe ser "CPF"
-      identificationNumber: document.getElementById("identificationNumber").value,
       cardholderEmail: document.getElementById("email").value,  // ANTES ERA SOLO "email"
     };
 
