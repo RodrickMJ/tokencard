@@ -42,7 +42,6 @@
     resultBox.textContent = "Procesando...";
 
     try {
-      // 1️⃣ Crear token
       const tokenResponse = await mp.createCardToken({
         cardNumber: cardNumber.value,
         cardExpirationMonth: cardExpirationMonth.value,
@@ -55,8 +54,6 @@
       });
 
       const cardToken = tokenResponse.id;
-
-      // 2️⃣ Enviar a tu backend INMEDIATAMENTE
       const response = await fetch(
         "https://webhooks.aspas.space/transactions/20/pay",
         {
