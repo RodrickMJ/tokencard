@@ -1,194 +1,95 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Mercado Pago Orders Test</title>
-<script src="https://sdk.mercadopago.com/js/v2"></script>
-
-<style>
-body {
-  font-family: Arial;
-}
-
-#form-checkout {
-  max-width: 400px;
-  margin: 40px auto;
-  padding: 20px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-}
-
-div[id^="form-checkout__"] {
-  margin-bottom: 15px;
-}
-
-input, button {
-  width: 100%;
-  padding: 12px;
-}
-
-button {
-  background: #009EE3;
-  color: white;
-  border: none;
-  cursor: pointer;
-}
-
-#error-message {
-  margin-top: 10px;
-  font-weight: bold;
-}
-</style>
-
+  <meta charset="UTF-8">
+  <title>Test Card Brick - Mercado Pago Orders</title>
+  <script src="https://sdk.mercadopago.com/js/v2"></script>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 500px; margin: 40px auto; }
+    #form-checkout { padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+    div[id^="form-checkout__"] { margin: 15px 0; }
+    input { width: 100%; padding: 10px; box-sizing: border-box; margin-bottom: 10px; }
+    button { width: 100%; padding: 12px; background: #009EE3; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
+    #error-message { color: red; margin-top: 15px; font-weight: bold; }
+  </style>
 </head>
 <body>
+  <h2>Prueba Tarjeta con Brick para Orders</h2>
+  <form id="form-checkout">
+    <div id="form-checkout__cardNumber"></div>
+    <div id="form-checkout__expirationDate"></div>
+    <div id="form-checkout__securityCode"></div>
+    <input type="text" id="form-checkout__cardholderName" placeholder="Nombre del titular" value="APRO">
+    <input type="email" id="form-checkout__cardholderEmail" placeholder="Email" value="test@test.com">
+    <button type="submit">Pagar $100.00 MXN</button>
+    <div id="error-message"></div>
+  </form>
 
-<form id="form-checkout">
+  <script>
+    const mp = new MercadoPago('APP_USR-dd74ca72-1fea-433e-ac0b-9d712dd4930e'); // ← TU PUBLIC_KEY REAL DE PRUEBAS
 
-  <div id="form-checkout__cardNumber"></div>
-  <div id="form-checkout__expirationDate"></div>
-  <div id="form-checkout__securityCode"></div>
+    const bricksBuilder = mp.bricks();
 
-  <input
-    type="text"
-    id="form-checkout__cardholderName"
-    placeholder="Titular"
-    value="APRO"
-  />
+    bricksBuilder.create('cardPayment', 'form-checkout', {
+      initialization: {
+        amount: 100.00,
+      },
+      callbacks: {
+        onReady: () => console.log('Brick cargado OK'),
+        onSubmit: ({ selectedPaymentMethod, formData }) => {
+          console.log('Token generado:', formData.token);
+          console.log('Datos del pago:', formData);
 
-  <input
-    type="email"
-    id="form-checkout__cardholderEmail"
-    placeholder="Email"
-    value="test_user@test.com"
-  />
-
-  <button type="submit">
-    Pagar $100 MXN
-  </button>
-
-  <div id="error-message"></div>
-
-</form>
-
-<script>
-
-const PUBLIC_KEY = "APP_USR-dd74ca72-1fea-433e-ac0b-9d712dd4930e";
-
-const ACCESS_TOKEN = "APP_USR-6663528584813218-021812-8ec51b88933aaeabea6d4251664bde74-3211917588";
-
-const mp = new MercadoPago(PUBLIC_KEY);
-
-const bricksBuilder = mp.bricks();
-
-bricksBuilder.create("cardPayment", "form-checkout", {
-
-  initialization: {
-    amount: 100
-  },
-
-  callbacks: {
-
-    onSubmit: async ({ selectedPaymentMethod, formData }) => {
-
-      try {
-
-        console.log("Token:", formData.token);
-
-        const response = await fetch(
-          "https://api.mercadopago.com/v1/orders",
-          {
-            method: "POST",
-
+          fetch('https://api.mercadopago.com/v1/orders', {
+            method: 'POST',
             headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${ACCESS_TOKEN}`,
-              "X-Idempotency-Key": crypto.randomUUID()
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer APP_USR-6663528584813218-021812-8ec51b88933aaeabea6d4251664bde74-3211917588', // ← TU ACCESS_TOKEN REAL DE PRUEBAS
+              'X-Idempotency-Key': 'test-brick-' + Date.now()
             },
-
             body: JSON.stringify({
-
-              type: "online",
-
-              processing_mode: "automatic",
-
-              total_amount: 100,
-
-              external_reference: "TEST-FRONT-ORDER",
-
-              payer: {
-                email: formData.payer.email
-              },
-
+              type: 'online',
+              processing_mode: 'automatic',
+              capture_mode: 'automatic_async',
+              external_reference: 'PLAN-EMPRENDEDOR-TEST-BRICK',
+              total_amount: '100.00',
+              payer: { email: formData.payer.email },
               transactions: {
-                payments: [
-                  {
-                    amount: 100,
-
-                    payment_method: {
-                      id: selectedPaymentMethod.id,
-                      token: formData.token,
-                      installments: 1
-                    }
+                payments: [{
+                  amount: '100.00',
+                  payment_method: {
+                    id: selectedPaymentMethod.id,
+                    type: 'credit_card',
+                    token: formData.token,
+                    installments: 1,
+                    statement_descriptor: 'Tienda Test MX'
                   }
-                ]
+                }]
               }
-
             })
+          })
+          .then(res => res.json())
+          .then(data => {
+            console.log('Respuesta completa de /v1/orders:', data);
+            if (data.errors) {
+              document.getElementById('error-message').innerText = 'Error: ' + (data.errors[0]?.message || JSON.stringify(data.errors));
+            } else {
+              document.getElementById('error-message').innerText = '¡Éxito! Status: ' + (data.status || 'procesado') + ' - Monto pagado: ' + data.total_paid_amount;
+            }
+          })
+          .catch(err => {
+            console.error('Error fetch:', err);
+            document.getElementById('error-message').innerText = 'Error conexión: ' + err.message;
+          });
 
-          }
-        );
-
-        const result = await response.json();
-
-        console.log(result);
-
-        if (result.errors) {
-
-          showError(result.errors[0].message);
-
-        } else {
-
-          showError(
-            "Status: " +
-            result.status +
-            " | ID: " +
-            result.id
-          );
-
+          return false;
+        },
+        onError: (error) => {
+          console.error('Error Brick:', error);
+          document.getElementById('error-message').innerText = 'Error en Brick: ' + error.message;
         }
-
-      } catch (error) {
-
-        console.error(error);
-
-        showError(error.message);
-
       }
-
-      return false;
-
-    },
-
-    onError: error => {
-
-      console.error(error);
-
-      showError(error.message);
-
-    }
-
-  }
-
-});
-
-function showError(msg) {
-
-  document.getElementById("error-message").innerText = msg;
-
-}
-
-</script>
-
+    });
+  </script>
 </body>
 </html>
