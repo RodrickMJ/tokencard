@@ -1,20 +1,31 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+  <meta charset="UTF-8">
+  <title>Test Card Payment Brick - Mercado Pago Orders</title>
   <script src="https://sdk.mercadopago.com/js/v2"></script>
+  <style>
+    #form-checkout { max-width: 400px; margin: 20px auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+    div[id^="form-checkout__"] { margin-bottom: 15px; }
+    input { width: 100%; padding: 10px; margin-bottom: 10px; }
+    button { width: 100%; padding: 12px; background: #009EE3; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    #error-message { color: red; margin-top: 10px; }
+  </style>
 </head>
 <body>
+  <h2 style="text-align: center;">Prueba Card Payment Brick para Orders</h2>
   <form id="form-checkout">
     <div id="form-checkout__cardNumber"></div>
     <div id="form-checkout__expirationDate"></div>
     <div id="form-checkout__securityCode"></div>
     <input type="text" id="form-checkout__cardholderName" placeholder="Nombre del titular" value="APRO">
     <input type="email" id="form-checkout__cardholderEmail" placeholder="Email" value="test@test.com">
-    <button type="submit">Pagar $100</button>
+    <button type="submit">Pagar $100.00 MXN</button>
+    <div id="error-message"></div>
   </form>
 
   <script>
-    const mp = new MercadoPago('APP_USR-dd74ca72-1fea-433e-ac0b-9d712dd4930e'); // De "Pruebas > Credenciales de prueba"
+    const mp = new MercadoPago('APP_USR-dd74ca72-1fea-433e-ac0b-9d712dd4930e'); // ← CAMBIA POR TU PUBLIC_KEY DE PRUEBAS REAL
 
     const bricksBuilder = mp.bricks();
 
@@ -23,16 +34,19 @@
         amount: 100.00,
       },
       callbacks: {
+        onReady: () => {
+          console.log('Brick listo para usar');
+        },
         onSubmit: ({ selectedPaymentMethod, formData }) => {
-          // Aquí envías formData.token + otros datos a tu backend (simula con console o fetch a localhost)
           console.log('Token generado:', formData.token);
-          // Ejemplo fetch a tu backend o directo Postman copy
+          console.log('Datos completos:', formData);  // Copia esto para debug
+
           fetch('https://api.mercadopago.com/v1/orders', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': 'Bearer APP_USR-6663528584813218-021812-8ec51b88933aaeabea6d4251664bde74-3211917588',
-              'X-Idempotency-Key': 'test-' + Date.now()
+              'Authorization': 'Bearer APP_USR-6663528584813218-021812-8ec51b88933aaeabea6d4251664bde74-3211917588',  // ← CAMBIA POR TU ACCESS_TOKEN DE PRUEBAS REAL
+              'X-Idempotency-Key': 'test-brick-' + Date.now()
             },
             body: JSON.stringify({
               type: 'online',
@@ -49,15 +63,32 @@
                     type: 'credit_card',
                     token: formData.token,
                     installments: 1,
-                    statement_descriptor: 'TuTiendaTest'
+                    statement_descriptor: 'Tienda Test MX'
                   }
                 }]
               }
             })
-          }).then(res => res.json()).then(console.log).catch(console.error);
-          return false; // Evita submit default
+          })
+          .then(res => res.json())
+          .then(data => {
+            console.log('Respuesta de Orders:', data);
+            if (data.errors) {
+              document.getElementById('error-message').innerText = 'Error: ' + (data.errors[0]?.message || 'Desconocido');
+            } else {
+              document.getElementById('error-message').innerText = '¡Pago procesado! Status: ' + (data.status || 'ok');
+            }
+          })
+          .catch(err => {
+            console.error('Error en fetch:', err);
+            document.getElementById('error-message').innerText = 'Error en la solicitud: ' + err.message;
+          });
+
+          return false; // Evita submit default del form
         },
-        onError: (error) => console.error(error)
+        onError: (error) => {
+          console.error('Error en Brick:', error);
+          document.getElementById('error-message').innerText = 'Error en Brick: ' + error.message;
+        }
       }
     });
   </script>
